@@ -83,3 +83,90 @@ print(confusion_matrix(y_test, predict_test))
 print("Classification Report : ")
 print(classification_report(y_test, predict_test))
 ```
+
+## Keras Implementation
+
+## Setup
+Install Keras\
+`pip install keras`
+
+## Run
+To run this code, just type this on the terminal (make sure that the directory & environment is correct):\
+`python MLP_Keras_Diabetes.py`
+
+## Results
+Here are the summary of the model that has been created in this experiment, and the accuracy of the model when working on the "diabetes dataset"
+### Model Summary
+### Model Accuracy
+
+## Code Explanation
+First, import the required libraries and necessary modules
+```python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras.optimizers import Adam
+```
+Read the dataset and set the values for X and y
+```python
+df = pd.read_csv('data/diabetes.csv')
+target_column = ['Outcome']
+predictors = list(set(list(df.columns))-set(target_column))
+df[predictors] = df[predictors]/df[predictors].max()
+
+X = df[predictors].values
+y = df[target_column].values
+```
+
+Split the data into training and test dataset. The training takes 70% of the dataset, while the test takes 30%.
+```python
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=40)
+```
+
+Set the batch size, number of classes, and number of epoch in this experiment
+```python
+batch_size = 128
+num_classes = 2
+epochs = 500
+```
+
+Convert the class vectors to binary class matrices.
+```python
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+```
+
+Create a sequential model. This model consist of 1 input layer, 1 hidden layer, and 1 output layer, in which each of those layers are followed by a dropout layer with a 0.2 rate. Each layer use relu activation function, except for the output which uses softmax activation.
+```python
+model = Sequential()
+model.add(Dense(32, activation='relu', input_shape=(8,)))
+model.add(Dropout(0.2))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(num_classes, activation='softmax'))
+
+model.summary()
+```
+
+Compile and fit the model to the data. The model uses categorical cross entropy for the loss function, and Adam as the optimizer
+```python
+model.compile(loss='categorical_crossentropy',
+              optimizer=Adam(),
+              metrics=['accuracy'])
+
+history = model.fit(X_train, y_train,
+                    batch_size=batch_size,
+                    epochs=epochs,
+                    verbose=1,
+                    validation_data=(X_test, y_test))
+```
+
+See the accuracy of the model
+```python
+score = model.evaluate(X_test, y_test, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
+```
